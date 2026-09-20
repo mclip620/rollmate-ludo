@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rollmate — Playable Ludo V3</title>
+<style>
+:root{
+  --bg:#0d1020;--panel:#171b2d;--panel2:#20263c;--text:#f7f8ff;--muted:#a7aec7;
+  --pink:#ee579e;--cyan:#42dacf;--yellow:#ffd34e;--purple:#957cf2;--red:#f25d6d;
+  --green:#54d18a;--line:#303750;--ref-green:#429775;--ref-yellow:#e1ac18;
+  --ref-blue:#355db0;--ref-red:#d94a2e;--ref-ink:#f4f5fa;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  margin:0;min-height:100vh;background:radial-gradient(circle at 50% -10%,#252a3d 0,#111522 42%,#080a11 100%);
+  color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif
+}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.app{min-height:100vh;display:grid;grid-template-columns:230px 1fr}
+.sidebar{padding:28px 18px;border-right:1px solid var(--line);background:rgba(13,16,32,.8)}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:900;font-size:22px}
+.logo{width:28px;height:28px;border-radius:9px;background:conic-gradient(from 30deg,var(--pink),var(--purple),var(--cyan),var(--pink));display:inline-block}
+.brand-word b{color:var(--pink)}
+.nav{display:grid;gap:8px;margin-top:42px}
+.nav button,.mobile-nav button{border:0;background:transparent;padding:12px 13px;border-radius:13px;display:flex;align-items:center;gap:11px;color:var(--muted);cursor:pointer;text-align:left}
+.nav button.active,.mobile-nav button.active{background:var(--panel2);color:#fff}
+.level-card{margin-top:35px;background:var(--panel);padding:14px;border:1px solid var(--line);border-radius:16px}
+.level-row{display:flex;justify-content:space-between;font-weight:800}
+.xp-track{height:6px;background:#30364c;border-radius:99px;margin:12px 0 7px;overflow:hidden}.xp-track span{display:block;width:68%;height:100%;background:linear-gradient(90deg,var(--purple),var(--pink))}
+.xp{font-size:11px;color:var(--muted)}
+main{min-width:0}.topbar{height:82px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px}
+.mobile-brand{display:none}.welcome small{color:var(--muted)}.welcome p{margin:3px 0 0;font-size:17px;font-weight:800}
+.account-tools{display:flex;align-items:center;gap:12px}.coin-pill{padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);display:flex;gap:7px;align-items:center;font-weight:800}.coin{color:var(--yellow)}
+.round-button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer}
+.avatar,.profile-avatar,.leader-avatar{display:grid;place-items:center;border-radius:50%;font-weight:900}.avatar{width:42px;height:42px;background:linear-gradient(135deg,var(--purple),var(--pink))}
+.content{padding:34px;max-width:1200px;margin:auto;width:100%;padding-bottom:40px}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;background:linear-gradient(135deg,#241d46,#171a31);border:1px solid var(--line);border-radius:25px;padding:32px;overflow:hidden}
+.tag,.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:900;color:var(--yellow)}
+h1{font-size:clamp(38px,6vw,70px);line-height:.95;margin:12px 0}h1 span{color:var(--pink)}h2{margin:6px 0;font-size:22px}
+.hero p,.inner-page>p{color:var(--muted);max-width:560px;line-height:1.6}
+.primary-button,.outline-button,.text-button{border:0;border-radius:13px;padding:12px 16px;cursor:pointer;font-weight:900}
+.primary-button{background:linear-gradient(135deg,var(--pink),#a957ef);box-shadow:0 10px 25px #ee579e22}.outline-button{background:transparent;border:1px solid var(--line)}.text-button{background:none;color:var(--muted)}
+.board-wrap{min-height:260px;display:grid;place-items:center;position:relative}
+.board{width:min(300px,90%);aspect-ratio:1;background:#eeeef5;border:9px solid #111522;border-radius:20px;display:grid;grid-template-columns:repeat(5,1fr);padding:10px;gap:4px;transform:rotate(-3deg)}
+.board span{border-radius:5px;background:#d5d7e4}.board span:nth-child(5n+1){background:#ee579e}.board span:nth-child(5n+3){background:#42dacf}.board span:nth-child(7n){background:#ffd34e}
+.pawn{position:absolute;width:28px;height:28px;border-radius:50% 50% 45% 45%;background:var(--yellow);z-index:2;right:15%;top:16%;box-shadow:0 8px 0 #b68d18}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0 36px}.stat,.mode-card,.ready-card,.profile-card,.metric{background:var(--panel);border:1px solid var(--line);border-radius:17px}.stat{padding:18px}.stat-label{color:var(--muted);font-size:13px}.stat-value{font-size:30px;font-weight:900;margin-top:6px}.stat-note{color:var(--muted);font-size:11px}
+.section-head{display:flex;justify-content:space-between;align-items:end;margin:18px 0}.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.mode-card{padding:17px;text-align:left;cursor:pointer;position:relative;display:grid;gap:6px}.mode-card.selected{border-color:var(--mode-color);box-shadow:0 0 0 1px var(--mode-color) inset}.mode-icon{color:var(--mode-color);font-size:20px}.mode-card small,.mode-meta{color:var(--muted)}.mode-meta{font-size:11px}.check{position:absolute;right:12px;top:12px;color:var(--mode-color)}
+.lower-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:34px}.leaderboard,.bonus{background:var(--panel);border:1px solid var(--line);border-radius:17px;overflow:hidden}.leader-row{display:grid;grid-template-columns:28px 40px 1fr auto 20px;gap:10px;align-items:center;padding:12px 15px;border-bottom:1px solid #272d40}.leader-row:last-child{border-bottom:0}.rank{font-weight:900;color:var(--muted)}.rank.first{color:var(--yellow)}.leader-avatar{width:36px;height:36px;background:#2d3550}.leader-name{display:grid}.leader-name small{color:var(--muted);font-size:11px}.score{font-weight:900}.bonus{padding:18px}.bonus h3{margin:0 0 5px}.bonus p{color:var(--muted);font-size:13px}.bonus-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:25px}
+.game-layout{display:block;max-width:100%}.game-card{padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.game-card>.game-topbar{display:none}.inner-page{max-width:1000px;margin:auto}.inner-page>.back{display:none}
+.game-stage{min-height:calc(100vh - 40px);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 12px 90px;color:var(--ref-ink)}
+.ref-topbar{width:min(640px,100%);height:66px;display:grid;grid-template-columns:56px 1fr 56px;align-items:center;justify-items:center}
+.ref-round{width:48px;height:48px;border-radius:50%;border:1px solid #34394b;background:#171b29;display:grid;place-items:center;font-size:20px;color:#f2f3f7;box-shadow:0 5px 16px #0005,inset 0 1px #ffffff0d;cursor:pointer}
+.ref-turn{font-size:15px;letter-spacing:.18em;color:#aeb4c7;font-weight:700}
+.ref-lobby{width:min(600px,100%);min-height:116px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;margin-top:6px;position:relative}
+.ref-die{position:absolute;left:0;bottom:0;width:88px;height:88px;border-radius:26px;background:#f7f6f1;border:1px solid #d9d5ca;box-shadow:0 0 0 8px #42977530,0 9px 24px #0007;display:grid;place-items:center;color:#111;cursor:pointer;padding:12px}
+.ref-die:disabled{cursor:not-allowed;opacity:.72}
+.die-face{width:100%;height:100%;position:relative;display:block}
+.die-pip{position:absolute;width:13px;height:13px;border-radius:50%;background:#222;display:none}
+.die-pip.p1{left:50%;top:50%;transform:translate(-50%,-50%)}
+.die-pip.p2{left:20%;top:20%}
+.die-pip.p3{right:20%;top:20%}
+.die-pip.p4{left:20%;bottom:20%}
+.die-pip.p5{right:20%;bottom:20%}
+.die-pip.p6{left:20%;top:50%;transform:translateY(-50%)}
+.die-pip.p7{right:20%;top:50%;transform:translateY(-50%)}
+.die-face.v1 .p1{display:block}
+.die-face.v2 .p2,.die-face.v2 .p5{display:block}
+.die-face.v3 .p2,.die-face.v3 .p1,.die-face.v3 .p5{display:block}
+.die-face.v4 .p2,.die-face.v4 .p3,.die-face.v4 .p4,.die-face.v4 .p5{display:block}
+.die-face.v5 .p2,.die-face.v5 .p3,.die-face.v5 .p1,.die-face.v5 .p4,.die-face.v5 .p5{display:block}
+.die-face.v6 .p2,.die-face.v6 .p3,.die-face.v6 .p6,.die-face.v6 .p7,.die-face.v6 .p4,.die-face.v6 .p5{display:block}
+.ref-chip{height:46px;padding:0 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;gap:8px;background:#171b29;border:1px solid #34394b;font-weight:700;font-size:14px;white-space:nowrap;box-shadow:0 5px 14px #0004}
+.ref-chip.green{justify-self:start;margin-left:106px;background:#38856a;border-color:#4da884;color:#fff}.ref-chip.white{justify-self:center}.ref-chip.yellow-block{width:78px;height:78px;padding:0;border:0;border-radius:25px;background:#9c781b;justify-self:end}
+.ref-board-wrap{width:min(600px,calc(100vw - 48px));aspect-ratio:1;margin-top:2px;position:relative}
+.ref-board{width:100%;height:100%;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 8px 0 #05070c,0 20px 35px #0008}
+.ref-board .cell{position:relative;border:1px solid #dedbd2;font-size:0;overflow:visible}
+.ref-board .home-red{background:var(--ref-red)}.ref-board .home-green{background:var(--ref-green)}.ref-board .home-yellow{background:var(--ref-yellow)}.ref-board .home-blue{background:var(--ref-blue)}
+.ref-board .home-red:after,.ref-board .home-green:after,.ref-board .home-yellow:after,.ref-board .home-blue:after{inset:16%;border-radius:10px;background:#f3eee5;box-shadow:none}
+.ref-board .home-red:before,.ref-board .home-green:before,.ref-board .home-yellow:before,.ref-board .home-blue:before{inset:28%;background:transparent;border:3px solid currentColor;box-shadow:none}
+.ref-board .home-green:before{color:var(--ref-green)}.ref-board .home-yellow:before{color:var(--ref-yellow)}.ref-board .home-blue:before{color:var(--ref-blue)}.ref-board .home-red:before{color:var(--ref-red)}
+.ref-board .path{background:#faf9f5}.ref-board .red-path{background:#f8d6ce}.ref-board .green-path{background:#d7eee2}.ref-board .yellow-path{background:#f5e7ba}.ref-board .blue-path{background:#d9e4f6}
+.ref-board .center{background:conic-gradient(from 45deg,var(--ref-green) 0 25%,var(--ref-yellow) 0 50%,var(--ref-red) 0 75%,var(--ref-blue) 0);position:relative;z-index:1}
+.ref-board .center:after{inset:0;background:transparent;box-shadow:none}.ref-board .center:before{display:none}
+.ref-board .cell.safe::after{content:"★";color:#fff;text-shadow:none;font-size:16px;position:absolute;inset:0;display:grid;place-items:center;z-index:2;pointer-events:none}
+.ref-board .token-stack{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:5}
+.ref-board .token-stack .token{pointer-events:auto}
+.ref-board .token-stack.count-2 .token{width:48%;height:48%}.ref-board .token-stack.count-3 .token{width:42%;height:42%}.ref-board .token-stack.count-4 .token{width:38%;height:38%}
+.ref-board .token-stack.count-2{grid-template-columns:repeat(2,1fr);grid-template-rows:1fr;padding:5%}
+.ref-board .token-stack.count-3,.ref-board .token-stack.count-4{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);padding:4%}
+.ref-board .token{position:relative;width:62%;height:62%;border:0;box-shadow:0 2px 5px #0003,inset 0 2px 2px #fff9;z-index:5;cursor:pointer}
+.ref-board .token.green{background:var(--ref-green);border:3px solid #fff}.ref-board .token.yellow{background:var(--ref-yellow);border:3px solid #fff}.ref-board .token.blue{background:var(--ref-blue);border:3px solid #fff}.ref-board .token.red{background:var(--ref-red);border:3px solid #fff}
+.ref-board .token.movable{outline:2px solid #fff;outline-offset:2px;box-shadow:0 0 0 5px #42977540,0 3px 8px #0004;animation:pulseToken .8s infinite alternate}
+@keyframes pulseToken{to{transform:scale(1.08)}}
+.roll-control{margin-top:14px;border:1px solid #4a5063;background:linear-gradient(135deg,#ee579e,#805ce6);color:#fff;border-radius:999px;padding:11px 22px;font-weight:900;box-shadow:0 8px 22px #0007,0 0 0 5px #ffffff08;cursor:pointer;z-index:10;min-width:140px}
+.roll-control:disabled{opacity:.45;cursor:not-allowed}.dice-result{margin-top:8px;color:#d9dce7;font-weight:900;font-size:12px;text-align:center;min-height:18px}
+.ref-bottom{width:min(600px,100%);height:100px;display:grid;grid-template-columns:78px 1fr 1fr 78px;gap:10px;align-items:center}
+.ref-color-block{width:78px;height:54px;border-radius:22px}.ref-color-block.blue{background:#415887}.ref-color-block.red{background:#8e4035}.ref-bottom .ref-chip{justify-self:center}.ref-bottom .ref-chip.left{grid-column:2}.ref-bottom .ref-chip.right{grid-column:3}.ref-bottom .ref-color-block:first-child{grid-column:1}.ref-bottom .ref-color-block:last-child{grid-column:4}
+.ref-status{color:#8f96a9;font-size:10px;letter-spacing:.08em;min-height:16px}
+.match-result{width:min(600px,100%);margin:12px auto 0;background:linear-gradient(145deg,#171b2d,#101426);border:1px solid var(--line);border-radius:18px;padding:18px;text-align:center;box-shadow:0 15px 40px #0007}
+.match-result h2{margin:0 0 6px}.match-result p{margin:6px 0;color:var(--muted)}.result-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.status-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.profile-card{padding:22px;display:flex;align-items:center;gap:16px}.profile-avatar{width:70px;height:70px;background:linear-gradient(135deg,var(--purple),var(--pink));font-size:22px}.profile-copy{flex:1}.profile-copy p{color:var(--muted);margin:5px 0 10px}.badges{display:flex;gap:7px;flex-wrap:wrap}.badge{padding:5px 8px;border-radius:8px;font-size:10px;font-weight:900}.badge.yellow{background:#ffe38c;color:#332600}.badge.pink{background:#f59bc2;color:#3d1026}.badge.cyan{background:#9ceee7;color:#08312d}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{padding:18px}.metric small{display:block;color:var(--muted)}.metric strong{font-size:20px;display:block;margin-top:7px}
+.modal-backdrop{position:fixed;inset:0;background:#0009;display:grid;place-items:center;padding:20px;z-index:20}.modal{width:min(460px,100%);background:#171b2d;border:1px solid var(--line);border-radius:20px;padding:25px;position:relative}.modal-close{position:absolute;right:12px;top:10px;border:0;background:none;font-size:26px;cursor:pointer}.invite-row{display:flex;gap:8px;margin:20px 0}.invite-code{flex:1;background:#0d1020;border:1px solid var(--line);border-radius:10px;padding:12px;font-weight:900}.copy-button{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:0 12px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#fff;color:#111;padding:11px 16px;border-radius:99px;font-weight:800;z-index:30;box-shadow:0 12px 35px #0005}
+.mobile-nav{display:none}.version-badge{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:40;padding:4px 9px;border-radius:999px;background:#ffffff0a;border:1px solid #ffffff12;color:#747b90;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;pointer-events:none}
+
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}.sidebar{display:none}.topbar{padding:0 16px}.mobile-brand{display:flex;align-items:center;gap:8px;font-weight:900}.welcome{display:none}
+  .content{padding:20px 16px calc(92px + env(safe-area-inset-bottom))}.hero{grid-template-columns:1fr;padding:24px}.lower-grid{grid-template-columns:1fr}.mobile-nav{position:fixed;bottom:0;left:0;right:0;height:70px;background:#121629ee;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);z-index:15;padding-bottom:env(safe-area-inset-bottom)}
+  .mobile-nav button{justify-content:center;flex-direction:column;gap:3px;font-size:10px;text-align:center}.stats,.modes{grid-template-columns:1fr 1fr}.metrics{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .account-tools .round-button{display:none}.hero{padding:20px}.stats,.modes{grid-template-columns:1fr}.profile-card{align-items:flex-start;flex-wrap:wrap}.profile-copy{min-width:calc(100% - 86px)}
+  .topbar{height:70px}.content{padding:0 0 calc(20px + env(safe-area-inset-bottom))}.game-stage{min-height:calc(100svh - 70px);padding:0 12px calc(30px + env(safe-area-inset-bottom))}
+  .ref-topbar{height:60px}.ref-lobby{min-height:100px}.ref-die{width:72px;height:72px;border-radius:22px}.ref-chip.green{margin-left:82px}.ref-board-wrap{width:calc(100vw - 32px);margin-top:4px}
+  .ref-bottom{height:auto;min-height:70px;grid-template-columns:54px 1fr 1fr 54px;gap:6px}.ref-color-block{width:54px;height:46px;border-radius:16px}.ref-chip{height:40px;padding:0 9px;font-size:11px}
+  .roll-control{margin-top:10px;padding:10px 18px;min-width:128px}.dice-result{margin-top:6px}.match-result{margin-top:8px;padding:15px}.result-actions .primary-button,.result-actions .outline-button{width:100%}
+}
+@media(max-width:340px){
+  .ref-topbar{height:56px}.ref-lobby{min-height:90px}.ref-die{width:64px;height:64px}.ref-chip.green{margin-left:70px;font-size:10px}.ref-chip.white{font-size:10px}.ref-chip.yellow-block{width:62px;height:62px}.ref-bottom{grid-template-columns:44px 1fr 1fr 44px}.ref-color-block{width:44px;height:42px}.ref-chip{font-size:10px;padding:0 6px}.roll-control{min-width:118px;font-size:12px}
+}
+
+/* --- Imported AK Ludo playing-area skin --- */
+.game-stage{min-height:calc(100vh - 40px);padding:4px 12px 70px;background:radial-gradient(circle at 50% 35%,#25283a 0,#141622 55%,#0b0c13 100%);border-radius:24px}
+.ak-topbar{width:min(640px,100%);height:54px;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;justify-items:center}
+.ak-round{width:42px;height:42px;border-radius:50%;border:1px solid #34394b;background:#171b29;display:grid;place-items:center;color:#f2f3f7;cursor:pointer}
+.ak-turn{font-size:13px;letter-spacing:.14em;color:#aeb4c7;font-weight:800}
+.ak-player-row{width:min(600px,100%);display:flex;justify-content:space-between;gap:8px;margin:4px 0 8px}
+.ak-player{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.10);padding:6px 10px;border-radius:20px;color:#fff;font-size:12px;font-weight:800;border:2px solid transparent;transition:.2s;min-width:92px}
+.ak-player.active{border-color:#ffd700;background:rgba(255,255,255,.2);box-shadow:0 0 12px #ffd70055}
+.ak-player.hidden{visibility:hidden}
+.ak-avatar{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:900}
+.ak-red{background:#ff4757}.ak-green{background:#2ed573}.ak-blue{background:#1e90ff}.ak-yellow{background:#ffa502}
+.ak-board-wrap{width:min(600px,calc(100vw - 40px));aspect-ratio:1;position:relative}
+.ak-board{width:100%;height:100%;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);border:3px solid #111;border-radius:7px;overflow:hidden;position:relative;background:#fff;box-shadow:0 8px 0 #05070c,0 20px 35px #0008}
+.ak-board .board-svg-bg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.ak-board .cell{position:relative;z-index:2;border:0!important;background:transparent!important;overflow:visible!important}
+.ak-board .cell.safe::after{display:none!important}
+.ak-board .token-stack{z-index:10}
+.ak-dice-row{width:100%;display:flex;justify-content:space-between;align-items:center;margin:7px 0;min-height:52px}
+.ak-dice-slot{width:72px;height:72px;border-radius:14px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.25);display:grid;place-items:center}
+.ak-dice-slot .ref-die{position:relative;left:auto;bottom:auto;width:66px;height:66px;border-radius:13px;padding:9px;margin:0}
+.ak-dice-slot .die-pip{width:8px;height:8px}
+.ak-status{width:min(600px,100%);margin-top:10px;background:rgba(255,255,255,.09);color:#fff;padding:9px 12px;border-radius:12px;text-align:center;font-size:12px;min-height:34px}
+.ak-roll{margin-top:10px;border:1px solid #4a5063;background:linear-gradient(135deg,#ee579e,#805ce6);color:#fff;border-radius:999px;padding:10px 22px;font-weight:900;box-shadow:0 8px 22px #0007;cursor:pointer;min-width:140px}
+.ak-roll:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:520px){.ak-board-wrap{width:min(94vw,390px)}.ak-player{min-width:78px;padding:5px 7px;font-size:10px}.ak-avatar{width:22px;height:22px}.ak-dice-slot{width:62px;height:62px}.ak-dice-slot .ref-die{width:56px;height:56px}}
+
+/* Redeem wallet UI */
+.redeem-card{margin-top:24px;padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--panel),var(--panel-2));display:flex;align-items:center;justify-content:space-between;gap:18px;box-shadow:0 12px 35px #0003}
+.redeem-card .redeem-balance{font-size:28px;font-weight:900;margin-top:5px}
+.redeem-card .redeem-note{color:var(--muted);font-size:12px;margin-top:5px}
+.redeem-button{border:0;border-radius:12px;padding:12px 18px;font-weight:900;color:#fff;background:linear-gradient(135deg,#19c8ff,#805ce6);cursor:pointer;white-space:nowrap}
+.redeem-button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:620px){.redeem-card{flex-direction:column;align-items:stretch}.redeem-button{width:100%}}
+
+/* --- Profile + Redeem UI upgrade --- */
+.wallet-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-top:22px}
+.wallet-balance-card,.redeem-options-card{background:linear-gradient(145deg,#1c2136,#121626);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 14px 38px #0003}
+.wallet-balance-card{position:relative;overflow:hidden}
+.wallet-balance-card:before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-70px;top:-80px;background:radial-gradient(circle,#ee579e30,transparent 68%)}
+.wallet-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.wallet-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:900}
+.wallet-amount{font-size:34px;font-weight:950;margin:8px 0 2px}
+.wallet-sub{font-size:12px;color:var(--muted)}
+.wallet-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#ffd34e18;border:1px solid #ffd34e33;font-size:22px}
+.redeem-options-card h3{margin:0 0 4px}
+.redeem-options-card>p{margin:0 0 14px;color:var(--muted);font-size:12px;line-height:1.5}
+.redeem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.redeem-option{border:1px solid var(--line);background:#0f1322;border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;font-weight:900;color:var(--text)}.redeem-option.active{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}.redeem-option small{display:block;color:var(--muted);font-size:10px;margin-top:3px;font-weight:700}
+.redeem-option small{display:block;color:var(--muted);font-size:10px;margin-top:3px;font-weight:700}
+.redeem-option:hover{border-color:#957cf2;transform:translateY(-1px)}
+.redeem-option:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.redeem-info{margin-top:12px;padding:10px 12px;border-radius:11px;background:#ffffff06;color:var(--muted);font-size:11px;line-height:1.45}
+.redeem-history{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:17px;overflow:hidden}
+.redeem-history-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.redeem-history-head h3{margin:0;font-size:15px}
+.redeem-empty{padding:18px;color:var(--muted);font-size:12px;text-align:center}
+.redeem-modal-balance{padding:14px;border-radius:14px;background:#ffffff06;border:1px solid var(--line);margin:15px 0}
+.redeem-modal-balance strong{font-size:23px}
+.redeem-modal-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:12px}
+@media(max-width:760px){.wallet-grid{grid-template-columns:1fr}.redeem-grid{grid-template-columns:repeat(2,1fr)}}
+
+
+/* Production-style redeem demo */
+.redeem-dashboard{display:grid;gap:14px}
+.redeem-hero{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.025))}
+.redeem-hero h3{margin:0 0 5px}.redeem-hero p{margin:0;color:#aeb6c5;font-size:13px}
+.redeem-balance{font-size:27px;font-weight:800;white-space:nowrap}
+.redeem-status{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:6px 10px;border-radius:999px;background:rgba(255,193,7,.12);color:#ffd66b}
+.redeem-status:before{content:"";width:7px;height:7px;border-radius:50%;background:#ffc107}
+.redeem-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.redeem-method{padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.035);text-align:left}
+.redeem-method strong{display:block;margin-bottom:4px}.redeem-method span{font-size:12px;color:#9ea7b7}
+.redeem-method.active{border-color:rgba(255,193,7,.55);box-shadow:0 0 0 1px rgba(255,193,7,.12) inset}
+.redeem-form{display:grid;grid-template-columns:1fr auto;gap:10px}
+.redeem-input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#101521;color:#fff;outline:none}
+.redeem-input:focus{border-color:rgba(255,193,7,.65)}
+.redeem-note{padding:12px;border-radius:12px;background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.15);color:#aebbd0;font-size:12px;line-height:1.5}
+.redeem-table{width:100%;border-collapse:collapse;font-size:12px}.redeem-table th,.redeem-table td{text-align:left;padding:11px 8px;border-bottom:1px solid rgba(255,255,255,.07)}.redeem-table th{color:#8f99aa;font-weight:600}.redeem-table td{color:#dce1ea}
+.redeem-pill{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,193,7,.1);color:#ffd66b}.redeem-empty{padding:18px;text-align:center;color:#8f99aa;font-size:13px}
+.card{padding:18px;background:var(--panel);border:1px solid var(--line);border-radius:17px}.card h3{margin:0 0 7px}.card>p{color:var(--muted);font-size:12px}
+.small-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:9px;padding:8px 10px;cursor:pointer;font-size:11px;font-weight:800}.small-btn:hover{border-color:var(--purple)}
+.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}.profile-head h2{margin:0}.profile-head p{margin:3px 0 0;color:var(--muted);font-size:13px}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}.stats-grid .stat{margin:0}.admin-request{padding:14px;border:1px solid var(--line);border-radius:13px;background:#0f1322}.admin-request+.admin-request{margin-top:10px}.admin-request-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.admin-request small{display:block;color:var(--muted);margin-top:4px;font-size:11px}.admin-request-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.admin-request-actions button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:8px 10px;cursor:pointer;font-weight:800;font-size:11px}.admin-request-actions .mark-paid{background:#1b6b4b;color:#d9ffea;border-color:#54d18a66}.admin-disclaimer{padding:11px 12px;border-radius:11px;background:#ff193d12;border:1px solid #ff193d2b;color:#ffc3cc;font-size:11px;line-height:1.5;margin-bottom:13px}
+@media(max-width:760px){.redeem-hero{align-items:flex-start;flex-direction:column}.redeem-methods{grid-template-columns:1fr}.redeem-form{grid-template-columns:1fr}}
+@media(max-width:560px){.stats-grid{grid-template-columns:1fr 1fr}.admin-request-head{display:block}}
+
+
+.redeem-notification-badge{display:inline-flex;min-width:18px;height:18px;padding:0 5px;align-items:center;justify-content:center;border-radius:999px;background:#ff4d67;color:#fff;font-size:10px;font-weight:900;margin-left:6px;vertical-align:middle}
+.admin-notify-card{padding:14px;border:1px solid var(--line);border-radius:14px;background:#111727;margin-bottom:12px}
+.admin-notify-card.new{border-color:#ffc10766;box-shadow:0 0 0 1px #ffc10718 inset}
+.admin-notify-card strong{display:block}
+.admin-notify-meta{color:var(--muted);font-size:11px;margin-top:5px;line-height:1.45}
+.admin-notify-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.admin-notify-actions button{border:1px solid var(--line);border-radius:9px;background:var(--panel2);padding:8px 10px;cursor:pointer;font-weight:800;font-size:11px;color:inherit}
+
+</style>
+</head>
+<body><span class="version-badge">ROLLMATE V3</span>
+<div id="app"></div>
+<script>
+const icons={home:'⌂',play:'▶',user:'●',users:'♟',dice:'⚄',trophy:'🏆',crown:'♛',bell:'●',chevron:'›',shield:'◆',zap:'ϟ',copy:'▣',check:'✓'};
+const modes={quick:{title:'Quick Match',text:'Play against 3 computer players',meta:'4 players · local',color:'#ee579e',icon:'⚡'}};
+const colors=['green','yellow','blue','red'];
+const colorNames={red:'Red',green:'Green',yellow:'Yellow',blue:'Blue'};
+const START_POSITIONS={green:13,yellow:26,blue:39,red:0};
+const STAR_GLOBAL_POSITIONS=new Set([12,25,38,51]);
+const SAFE_GLOBAL_POSITIONS=new Set([...Object.values(START_POSITIONS),...STAR_GLOBAL_POSITIONS]);
+const STORAGE_KEY='rollmate.ludo.v3.stats';
+const PROFILE_KEY='rollmate.ludo.v3.profile';
+const DEFAULT_STATS={coins:0,wins:0,played:0,bestStreak:0,xp:0,streak:0};
+let activeTab='Home',selectedMode='quick',showAll=false,noticeTimer=null;
+let stats=loadStats(),profile=loadProfile(),game=null;
+const REDEEM_HISTORY_KEY='rollmate.ludo.v3.redeemHistory';
+const REDEEM_REQUESTS_KEY='rollmate.ludo.v3.redeemRequests';
+const REDEEM_NOTIFICATIONS_KEY='rollmate.ludo.v3.redeemNotifications';
+const COINS_PER_RUPEE=100;
+const MIN_REDEEM_COINS=500;
+let redeemHistory=loadRedeemHistory();
+let redeemRequests=loadRedeemRequests();
+let redeemNotifications=loadRedeemNotifications();
+function loadRedeemNotifications(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(REDEEM_NOTIFICATIONS_KEY)||'[]');
+    return Array.isArray(raw)?raw.slice(0,50):[];
+  }catch(e){return []}
+}
+function saveRedeemNotifications(){
+  try{localStorage.setItem(REDEEM_NOTIFICATIONS_KEY,JSON.stringify(redeemNotifications.slice(0,50)))}catch(e){}
+}
+function unreadRedeemNotifications(){
+  return redeemNotifications.filter(n=>!n.read).length;
+}
+
+function loadRedeemHistory(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(REDEEM_HISTORY_KEY)||'[]');
+    return Array.isArray(raw)?raw.slice(0,8):[];
+  }catch(e){return []}
+}
+function saveRedeemHistory(){
+  try{localStorage.setItem(REDEEM_HISTORY_KEY,JSON.stringify(redeemHistory.slice(0,8)))}catch(e){}
+}
+function loadRedeemRequests(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(REDEEM_REQUESTS_KEY)||'[]');
+    return Array.isArray(raw)?raw.slice(0,50):[];
+  }catch(e){return []}
+}
+function saveRedeemRequests(){
+  try{localStorage.setItem(REDEEM_REQUESTS_KEY,JSON.stringify(redeemRequests.slice(0,50)))}catch(e){}
+}
+function coinsToRupees(coins){
+  const value=Number(coins||0)/COINS_PER_RUPEE;
+  return value.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function maskUpi(upi){
+  const parts=String(upi||'').split('@');
+  if(parts.length!==2)return '••••';
+  const name=parts[0];
+  return (name.length>3?name.slice(0,2)+'•••'+name.slice(-1):'••••')+'@'+parts[1];
+}
+function requestDate(value){
+  try{return new Date(value).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}catch(e){return String(value||'')}
+}
+
+const players=[['Mira Chen','mira.moves','MC','2,840'],['Noah Williams','rollwithnoah','NW','2,615'],['You','sunny.side','SS','2,480'],['Iris Okafor','irisplays','IO','2,210']];
+
+function loadStats(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    const parsed=raw?JSON.parse(raw):{};
+    const source=parsed&&typeof parsed==='object'?parsed:{};
+    const numeric=key=>{const n=Number(source[key]);return Number.isFinite(n)&&n>=0?n:DEFAULT_STATS[key]};
+    return {coins:numeric('coins'),wins:numeric('wins'),played:numeric('played'),bestStreak:numeric('bestStreak'),xp:numeric('xp'),streak:numeric('streak')};
+  }catch(e){return {...DEFAULT_STATS}}
+}
+function saveStats(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(stats))}catch(e){}
+}
+function loadProfile(){
+  const fallback={name:'Sunny Side',username:'sunny.side'};
+  try{
+    const parsed=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
+    const name=typeof parsed?.name==='string'&&parsed.name.trim()?parsed.name.trim():fallback.name;
+    const username=typeof parsed?.username==='string'&&parsed.username.trim()?parsed.username.trim().replace(/^@/,''):fallback.username;
+    return {name,username};
+  }catch(e){return fallback}
+}
+function saveProfile(){
+  try{localStorage.setItem(PROFILE_KEY,JSON.stringify(profile))}catch(e){}
+}
+function pageShell(content){
+  return '<div class="app"><aside class="sidebar"><a class="brand" href="#" data-nav="Home"><span class="logo"></span><span class="brand-word">roll<b>mate</b></span></a><nav class="nav">'+['Home','Play','Profile'].map(navItem).join('')+'</nav><div class="level-card"><div class="level-row"><span>Level 14</span><span>♛</span></div><div class="xp-track"><span style="width:'+Math.min(100,Math.round((stats.xp%1000)/10))+'%"></span></div><div class="xp">'+stats.xp.toLocaleString()+' XP earned</div></div></aside><main><header class="topbar"><div class="mobile-brand"><span class="logo"></span><span>roll<b style="color:var(--pink)">mate</b></span></div><div class="welcome"><small>Playable local Ludo</small><p>Welcome back, '+profile.name.split(' ')[0]+'.</p></div><div class="account-tools"><div class="coin-pill"><span class="coin">●</span><span>'+stats.coins.toLocaleString()+'</span></div><button class="round-button" data-action="notifications" aria-label="Notifications">'+icons.bell+'</button><span class="avatar">'+profile.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase()+'</span></div></header><div class="content">'+content+'</div></main><nav class="mobile-nav">'+['Home','Play','Profile'].map(navItem).join('')+'</nav></div>'
+}
+function navItem(n){return '<button class="'+(activeTab===n?'active':'')+'" data-nav="'+n+'"><span>'+({Home:icons.home,Play:icons.play,Profile:icons.user}[n])+'</span><span>'+n+'</span></button>'}
+function modeCard(k){
+  const m=modes[k];
+  return '<button class="mode-card '+(selectedMode===k?'selected':'')+'" style="--mode-color:'+m.color+'" data-mode="'+k+'"><span class="mode-icon">'+m.icon+'</span><strong>'+m.title+'</strong><small>'+m.text+'</small><span class="mode-meta">'+m.meta+'</span>'+(selectedMode===k?'<span class="check">✓</span>':'')+'</button>'
+}
+function homeView(){
+  const rate=stats.played?Math.round(stats.wins/stats.played*100):0;
+  return `<section class="hero"><div><span class="tag">✦ Fully playable in browser</span><h1>Roll in.<br><span>Play Ludo.</span></h1><p>Choose your table, roll the dice, move your tokens and race all four pieces home. This version is local-only.</p><button class="primary-button" data-action="play">▶ Play now ›</button></div><div class="board-wrap"><span class="pawn"></span><div class="board">${Array.from({length:25},()=>'<span></span>').join('')}</div></div></section>
+  <section class="stats"><div class="stat"><div class="stat-label">🏆 Wins</div><div class="stat-value">${stats.wins}</div><div class="stat-note">total local wins</div></div><div class="stat"><div class="stat-label">⚄ Played</div><div class="stat-value">${stats.played}</div><div class="stat-note">total games</div></div><div class="stat"><div class="stat-label">♛ Win rate</div><div class="stat-value">${rate}%</div><div class="stat-note">all completed games</div></div></section>
+  <section><div class="section-head"><div><span class="eyebrow">Choose your table</span><h2>One local mode available</h2></div></div><div class="modes">${Object.keys(modes).map(modeCard).join('')}</div></section>
+  <div class="lower-grid"><section><div class="section-head"><div><span class="eyebrow">Local legends</span><h2>Leaderboard</h2></div><button class="text-button" data-action="leaderboard">View all ›</button></div><div class="leaderboard">${players.slice(0,showAll?4:3).map((p,i)=>`<div class="leader-row ${p[0]==='You'?'you':''}"><span class="rank ${i===0?'first':''}">${i+1}</span><span class="leader-avatar">${p[2]}</span><span class="leader-name"><strong>${p[0]}</strong><small>${p[1]}</small></span><span class="score">${p[0]==='You'?stats.wins:p[3]}</span><span>›</span></div>`).join('')}</div></section>
+  <section><div class="section-head"><div><span class="eyebrow">Play without waiting</span><h2>Local game</h2></div></div><div class="bonus"><h3>Start a real match.</h3><p>Quick Match is the only implemented table: you play against three local computer players.</p><button class="primary-button" data-action="play">Open game</button></div></section></div></section>`
+}
+function playView(){
+  return `<section class="inner-page"><span class="eyebrow" style="color:var(--yellow)">Game room</span><h1>Pick a table.</h1><p>Quick Match is against 3 computer players. No online matchmaking or backend is used.</p><div class="modes" style="margin-top:25px">${Object.keys(modes).map(modeCard).join('')}</div><div class="ready-card"><div class="ready-intro"><span class="ready-icon">⚄</span><div><strong>Ready when you are.</strong><small>All game rules and progress run locally in this file.</small></div></div><div class="ready-actions"><button class="primary-button" data-action="startGame">▶ Start game</button></div></div></section>`
+}
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, function(ch){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+  });
+}
+function profileView(){
+  const p=loadProfile(), s=loadStats();
+  const recent=redeemHistory.slice(0,5);
+  return `<div class="view">
+    <div class="profile-head">
+      <div class="avatar">${escapeHtml((p.name||'P').slice(0,1).toUpperCase())}</div>
+      <div><h2>${escapeHtml(p.name||'Player')}</h2><p>@${escapeHtml(p.username||'player')}</p></div>
+    </div>
+
+    <div class="redeem-dashboard">
+      <div class="redeem-hero">
+        <div>
+           <div class="redeem-status">Local demo • Manual payout</div>
+          <h3 style="margin-top:10px">Coin Wallet</h3>
+           <p>100 coins = ₹1.00. Minimum redeem: 500 coins.</p>
+        </div>
+        <div class="redeem-balance">${Number(s.coins||0).toLocaleString()} 🪙</div>
+      </div>
+
+      <div class="card">
+        <h3>Redeem Center</h3>
+         <p class="muted">Choose coins, enter a UPI ID and submit a payout request.</p>
+        <div class="redeem-methods">
+           <button class="redeem-method active" data-action="redeemAmount" data-amount="500"><strong>500 🪙</strong><span>₹${coinsToRupees(500)}</span></button>
+           <button class="redeem-method" data-action="redeemAmount" data-amount="1000"><strong>1,000 🪙</strong><span>₹${coinsToRupees(1000)}</span></button>
+           <button class="redeem-method" data-action="redeemAmount" data-amount="2500"><strong>2,500 🪙</strong><span>₹${coinsToRupees(2500)}</span></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>How the demo works</h3>
+         <div class="redeem-note">1. Select coins → 2. Enter UPI ID → 3. Your request appears in Admin Requests → 4. You manually pay and mark it paid. This file stores data only in this browser.</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <h3 style="margin:0">Recent Requests</h3>
+           <div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><button class="small-btn" data-action="adminRedeems">Admin Requests</button><button class="small-btn" data-action="redeemNotifications">🔔 Notifications ${unreadRedeemNotifications()?`<span class="redeem-notification-badge">${unreadRedeemNotifications()}</span>`:""}</button><button class="small-btn" data-action="redeem">Redeem</button></div>
+        </div>
+         ${recent.length ? `<div style="overflow:auto;margin-top:10px"><table class="redeem-table"><thead><tr><th>ID</th><th>UPI</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>${recent.map(r=>`<tr><td>${escapeHtml(r.id)}</td><td>${escapeHtml(r.upiMasked||'—')}</td><td>₹${escapeHtml(coinsToRupees(r.coins))}</td><td><span class="redeem-pill">${escapeHtml(r.status)}</span></td><td>${escapeHtml(r.date||'')}</td></tr>`).join('')}</tbody></table></div>` : `<div class="redeem-empty">No redemption requests yet.</div>`}
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><b>${s.played||0}</b><span>Games</span></div>
+      <div class="stat"><b>${s.wins||0}</b><span>Wins</span></div>
+      <div class="stat"><b>${s.coins||0}</b><span>Coins</span></div>
+    </div>
+  </div>`;
+}
+function showModal(title,body){
+  const m=document.createElement('div');
+  m.className='modal-backdrop';
+  m.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="dynamicModalTitle"><button class="modal-close" aria-label="Close">×</button><h2 id="dynamicModalTitle">'+escapeHtml(title)+'</h2><div class="modal-body">'+body+'</div></div>';
+  document.body.appendChild(m);
+  const close=()=>m.remove();
+  m.querySelector('.modal-close').onclick=close;
+  m.addEventListener('click',event=>{if(event.target===m)close()});
+  return m;
+}
+function submitRedeemRequest(modal){
+  const coins=Number(modal.querySelector('[data-selected-coins]')?.value||0);
+  const upi=String(modal.querySelector('#redeemUpi')?.value||'').trim().toLowerCase();
+  const currentStats=loadStats();
+  const upiPattern=/^[a-z0-9][a-z0-9._-]{1,80}@[a-z][a-z0-9.-]{1,40}$/i;
+  if(!upiPattern.test(upi)){toast('Enter a valid UPI ID, for example name@upi.');return}
+  if(!Number.isInteger(coins)||coins<MIN_REDEEM_COINS){toast('Minimum redeem is 500 coins.');return}
+  if(Number(currentStats.coins||0)<coins){toast('Not enough coins for this request.');return}
+  if(redeemRequests.some(r=>r.playerId===profile.username&&r.status==='Pending')){toast('You already have a pending request.');return}
+  const id='RM-'+Date.now().toString(36).toUpperCase();
+  const now=new Date().toISOString();
+  const request={id,playerId:profile.username,playerName:profile.name,upi,coins,amount:coins/COINS_PER_RUPEE,status:'Pending',createdAt:now,paymentReference:''};
+  redeemRequests.unshift(request);saveRedeemRequests();
+  redeemNotifications.unshift({id:request.id,title:'New redeem request',message:(request.playerName||request.playerId||'Player')+' requested '+Number(request.coins).toLocaleString()+' coins (demo).',createdAt:now,read:false});
+  redeemNotifications=redeemNotifications.slice(0,50);saveRedeemNotifications();
+  stats=loadStats();stats.coins-=coins;saveStats();
+  redeemHistory.unshift({id,coins,amount:coins/COINS_PER_RUPEE,upiMasked:maskUpi(upi),status:'Pending',date:requestDate(now)});
+  redeemHistory=redeemHistory.slice(0,8);saveRedeemHistory();
+  modal.remove();toast('Redeem request created for ₹'+coinsToRupees(coins));render();
+}
+function showRedeemNotifications(){
+  const unread=unreadRedeemNotifications();
+  const rows=redeemNotifications.length?redeemNotifications.map(n=>`<div class="admin-notify-card ${n.read?'':'new'}">
+    <strong>${escapeHtml(n.title||'Redeem notification')}</strong>
+    <div class="admin-notify-meta">${escapeHtml(n.message||'')}<br>${escapeHtml(requestDate(n.createdAt))}</div>
+    <div class="admin-notify-actions">${!n.read?`<button data-read-notification="${escapeHtml(n.id)}">Mark read</button>`:''}<button data-open-request="${escapeHtml(n.id)}">Open requests</button></div>
+  </div>`).join(''):'<div class="redeem-empty">No notifications yet.</div>';
+  const m=showModal('Redeem Notifications',`<div class="redeem-note">Local demo notifications only. They stay in this browser and are not sent to your phone/email.</div><div style="margin-top:14px">${rows}</div>${unread?'<button class="small-btn" data-mark-all-read style="margin-top:8px">Mark all as read</button>':''}`);
+  m.querySelectorAll('[data-read-notification]').forEach(b=>b.addEventListener('click',()=>{
+    const n=redeemNotifications.find(x=>x.id===b.dataset.readNotification); if(n){n.read=true;saveRedeemNotifications();m.remove();showRedeemNotifications();render();}
+  }));
+  m.querySelectorAll('[data-open-request]').forEach(b=>b.addEventListener('click',()=>{m.remove();showAdminRedeems();}));
+  m.querySelector('[data-mark-all-read]')?.addEventListener('click',()=>{redeemNotifications.forEach(n=>n.read=true);saveRedeemNotifications();m.remove();showRedeemNotifications();render();});
+}
+function showAdminRedeems(){
+  const sorted=[...redeemRequests].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const rows=sorted.length?sorted.map(r=>`<div class="admin-request">
+    <div class="admin-request-head"><div><strong>${escapeHtml(r.playerName||r.playerId||'Player')}</strong><small>${escapeHtml(r.id)} · ${escapeHtml(requestDate(r.createdAt))}</small></div><div style="text-align:right"><strong>₹${escapeHtml(coinsToRupees(r.coins))}</strong><small>${Number(r.coins).toLocaleString()} coins</small></div></div>
+    <div style="margin-top:12px;font-size:14px;word-break:break-all"><strong>${escapeHtml(r.upi)}</strong></div>
+    <div class="admin-request-actions">${r.status==='Pending'?'<button class="mark-paid" data-mark-paid="'+escapeHtml(r.id)+'">Mark paid</button>':'<span class="redeem-pill">'+escapeHtml(r.status)+'</span>'}<button data-copy-upi="${escapeHtml(r.upi)}">Copy UPI</button></div>
+    ${r.paymentReference?'<small>Reference: '+escapeHtml(r.paymentReference)+'</small>':''}
+  </div>`).join(''):'<div class="redeem-empty">No payout requests yet.</div>';
+  const m=showModal('Admin Requests',`<div class="admin-disclaimer">Demo-only admin view. Requests are stored in this browser's localStorage, so this is not secure for a public real-money app and does not send data to you remotely.</div><div class="redeem-note">Verify the player and amount, pay manually from your business UPI account, then save the payment reference.</div><div style="margin-top:14px">${rows}</div>`);
+  m.querySelectorAll('[data-copy-upi]').forEach(button=>button.addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(button.dataset.copyUpi);toast('UPI ID copied')}catch(e){toast(button.dataset.copyUpi)}
+  }));
+  m.querySelectorAll('[data-mark-paid]').forEach(button=>button.addEventListener('click',()=>{
+    const request=redeemRequests.find(r=>r.id===button.dataset.markPaid);
+    if(!request||request.status!=='Pending')return;
+    const reference=window.prompt('Payment reference / UTR (optional):','');
+    if(reference===null)return;
+    request.status='Paid';request.paymentReference=reference.trim();request.paidAt=new Date().toISOString();
+    saveRedeemRequests();
+    const history=redeemHistory.find(r=>r.id===request.id);
+    if(history){history.status='Paid';saveRedeemHistory()}
+    m.remove();toast('Request marked paid');showAdminRedeems();
+  }));
+}
+function showRedeem(preselected){
+  const s=loadStats(), balance=Number(s.coins||0);
+  const amounts=[500,1000,2500];
+  let selected=amounts.includes(Number(preselected))?Number(preselected):amounts[0];
+  const choices=amounts.map(a=>`<button class="redeem-option ${selected===a?'active':''}" data-select-coins="${a}" ${balance<a?'disabled':''}><b>${a.toLocaleString()} 🪙</b><small>₹${coinsToRupees(a)}</small></button>`).join('');
+  const m=showModal('Redeem Center',`<div class="redeem-dashboard">
+    <div class="redeem-hero"><div><div class="redeem-status">Manual payout demo</div><p style="margin-top:8px">Available in-game balance</p></div><div class="redeem-balance">${balance.toLocaleString()} 🪙</div></div>
+    <div class="redeem-note">100 coins = ₹1.00. Your UPI ID is stored locally in this browser for this demo; it is not sent to the app owner automatically.</div>
+    <div class="redeem-grid">${choices}</div>
+    <input type="hidden" data-selected-coins value="${selected}">
+    <label style="display:block;margin:15px 0 6px;font-size:12px;color:var(--muted)" for="redeemUpi">Your UPI ID</label>
+    <input class="redeem-input" id="redeemUpi" type="text" inputmode="email" autocomplete="off" maxlength="80" placeholder="example@upi" aria-describedby="upiHint">
+    <div id="upiHint" class="redeem-modal-note">Enter a UPI ID such as name@upi. Never enter your UPI PIN here.</div>
+    <button class="primary-button" style="width:100%;margin-top:16px" data-submit-redeem ${balance<MIN_REDEEM_COINS?'disabled':''}>Create payout request</button>
+    ${balance<MIN_REDEEM_COINS?'<div class="redeem-modal-note">You need at least 500 coins to redeem.</div>':''}
+  </div>`);
+  m.querySelectorAll('[data-select-coins]').forEach(button=>button.addEventListener('click',()=>{
+    selected=Number(button.dataset.selectCoins);
+    m.querySelector('[data-selected-coins]').value=String(selected);
+    m.querySelectorAll('[data-select-coins]').forEach(b=>b.classList.toggle('active',b===button));
+  }));
+  m.querySelector('[data-submit-redeem]')?.addEventListener('click',()=>submitRedeemRequest(m));
+}
+function boardCells(){
+  let a=[];
+  for(let r=0;r<15;r++)for(let c=0;c<15;c++){
+    let cls='cell path';
+    if(r<6&&c<6)cls='cell home-red';
+    else if(r<6&&c>8)cls='cell home-green';
+    else if(r>8&&c<6)cls='cell home-blue';
+    else if(r>8&&c>8)cls='cell home-yellow';
+    else if(r>=6&&r<=8&&c>=6&&c<=8)cls='cell center';
+    else if(r===7&&c<=5)cls+=' red-path';
+    else if(c===7&&r<=5)cls+=' green-path';
+    else if(r===7&&c>=9)cls+=' yellow-path';
+    else if(c===7&&r>=9)cls+=' blue-path';
+    const gp=path.findIndex(([pr,pc])=>pr===r&&pc===c);
+    const safe=gp>=0&&STAR_GLOBAL_POSITIONS.has(gp);
+    a.push('<div class="'+cls+(safe?' safe':'')+'" data-cell="'+r+'-'+c+'"'+(safe?' aria-label="Safe star"':'')+'></div>');
+  }
+  return a.join('')
+}
+
+const path=[['6','0'],['6','1'],['6','2'],['6','3'],['6','4'],['6','5'],['5','6'],['4','6'],['3','6'],['2','6'],['1','6'],['0','6'],['0','7'],['0','8'],['1','8'],['2','8'],['3','8'],['4','8'],['5','8'],['6','9'],['6','10'],['6','11'],['6','12'],['6','13'],['6','14'],['7','14'],['8','14'],['8','13'],['8','12'],['8','11'],['8','10'],['8','9'],['9','8'],['10','8'],['11','8'],['12','8'],['13','8'],['14','8'],['14','7'],['14','6'],['13','6'],['12','6'],['11','6'],['10','6'],['9','6'],['8','5'],['8','4'],['8','3'],['8','2'],['8','1'],['8','0'],['7','0']].map(x=>x.map(Number));
+
+function initGame(){
+  game={turn:0,dice:null,rolling:false,over:false,message:'Roll the dice.',tokens:colors.map((c,pi)=>[0,0,0,0].map(()=>({pos:-1,color:c,player:pi}))),players:colors.map((c,i)=>({color:c,name:i===0?'You':colorNames[c]+' Bot',finished:0})),moves:0,reward:0,counted:false};
+  renderGame();
+}
+function globalPos(pi,pos){if(pos<0||pos>=52)return -1;return (START_POSITIONS[colors[pi]]+pos)%52}
+function tokenCell(pi,token){
+  if(token.pos<0)return null;
+  if(token.pos>=52){
+    const h={
+      green:[[1,7],[2,7],[3,7],[4,7],[5,7]],
+      yellow:[[7,13],[7,12],[7,11],[7,10],[7,9]],
+      blue:[[13,7],[12,7],[11,7],[10,7],[9,7]],
+      red:[[7,1],[7,2],[7,3],[7,4],[7,5]]
+    };
+    return h[token.color][Math.min(token.pos-52,4)];
+  }
+  return path[globalPos(pi,token.pos)]
+}
+function canMove(t,d){if(t.pos<0)return d===6;return t.pos+d<=56}
+function legalTokens(pi,d){return game.tokens[pi].map((t,i)=>({t,i})).filter(x=>canMove(x.t,d))}
+function dieFace(value){
+  if(!value)return '<span class="die-face neutral" aria-hidden="true"></span>';
+  return '<span class="die-face v'+value+'" aria-hidden="true">'+[1,2,3,4,5,6,7].map(n=>'<i class="die-pip p'+n+'"></i>').join('')+'</span>'
+}
+function announce(msg){game.message=msg}
+function rollDice(){
+  if(!game||game.over||game.rolling||game.dice!==null||game.turn!==0)return;
+  game.rolling=true;announce('Rolling');renderGame();
+  let ticks=0;
+  const timer=setInterval(()=>{
+    ticks++;
+    game.displayDie=1+Math.floor(Math.random()*6);
+    renderGame();
+    if(ticks>=7){
+      clearInterval(timer);
+      game.dice=1+Math.floor(Math.random()*6);game.displayDie=game.dice;game.rolling=false;
+      const movable=legalTokens(game.turn,game.dice);
+      if(!movable.length){
+        announce(game.dice===6?'No legal move. Six gives another roll.':'No legal move. Turn passes.');
+        const six=game.dice===6;
+        game.dice=null;
+        if(!six)nextTurn();
+        renderGame();
+        if(game.turn!==0)setTimeout(botTurn,500);
+        return;
+      }
+      announce(game.dice===6?'Six! Choose a glowing token for an extra turn.':'Rolled a '+game.dice+'. Choose a glowing token.');
+      renderGame();
+      if(game.turn!==0)setTimeout(botChooseMove,550);
+    }
+  },75)
+}
+function nextTurn(){game.dice=null;game.displayDie=null;game.turn=(game.turn+1)%4;game.moves++}
+function finishMatch(pi){
+  game.winner=pi;
+  game.over=true;
+  if(!game.counted){
+    game.counted=true;stats.played++;
+    if(pi===0){
+      stats.wins++;stats.streak++;stats.bestStreak=Math.max(stats.bestStreak,stats.streak);
+      const reward=100+Math.floor(Math.random()*51);game.reward=reward;stats.coins+=reward;stats.xp+=reward;
+      announce('You win! You earned '+reward+' coins and '+reward+' XP.');
+    }else{
+      stats.streak=0;stats.xp+=25;announce(game.players[pi].name+' wins the game.');
+    }
+    saveStats();
+  }
+  renderGame()
+}
+function moveToken(pi,ti){
+  if(!game||game.over||game.dice===null||game.turn!==pi)return;
+  const t=game.tokens[pi][ti],d=game.dice;
+  if(!canMove(t,d))return;
+  const oldPos=t.pos;
+  if(t.pos<0)t.pos=0;else t.pos+=d;
+  const enteredHome=t.pos>=52&&oldPos<52;
+  capture(pi,ti);
+  if(t.pos===56)game.players[pi].finished++;
+  if(game.players[pi].finished===4){finishMatch(pi);return}
+  if(enteredHome)announce('Token entered the '+colorNames[t.color]+' home lane.');
+  else if(t.pos===56)announce('Token reached home.');
+  else if(game.lastCapture)announce('Capture! An unsafe token was sent back to the yard.');
+  else announce(d===6?'Six! Roll again.':'Good move. Turn passes.');
+  const extra=d===6;
+  game.dice=null;game.displayDie=d;
+  if(!extra)nextTurn();
+  renderGame();
+  if(game.turn!==0&&!game.over)setTimeout(botTurn,500)
+}
+function capture(pi,ti){
+  const t=game.tokens[pi][ti];game.lastCapture=false;
+  if(t.pos<0||t.pos>51)return;
+  const gp=globalPos(pi,t.pos);
+  if(SAFE_GLOBAL_POSITIONS.has(gp))return;
+  for(let p=0;p<4;p++){
+    if(p===pi)continue;
+    for(const other of game.tokens[p]){
+      if(other.pos>=0&&other.pos<52&&globalPos(p,other.pos)===gp){other.pos=-1;game.lastCapture=true}
+    }
+  }
+}
+function botChooseMove(){
+  if(!game||game.over||game.turn===0||game.dice===null)return;
+  const pi=game.turn,movable=legalTokens(pi,game.dice);
+  if(!movable.length){game.dice=null;nextTurn();renderGame();setTimeout(botTurn,450);return}
+  const captureMove=movable.find(x=>x.t.pos>=0&&x.t.pos<52&&(()=>{const gp=globalPos(pi,x.t.pos+game.dice);return !SAFE_GLOBAL_POSITIONS.has(gp)&&game.tokens.some((arr,p)=>p!==pi&&arr.some(o=>o.pos>=0&&o.pos<52&&globalPos(p,o.pos)===gp))})());
+  const pick=captureMove||movable.find(x=>x.t.pos<0&&game.dice===6)||movable.sort((a,b)=>b.t.pos-a.t.pos)[0];
+  moveToken(pi,pick.i)
+}
+function botTurn(){if(!game||game.over||game.turn===0)return;rollBotDice()}
+function rollBotDice(){
+  if(!game||game.over||game.rolling||game.dice!==null||game.turn===0)return;
+  game.rolling=true;game.displayDie=1+Math.floor(Math.random()*6);renderGame();
+  setTimeout(()=>{
+    game.dice=1+Math.floor(Math.random()*6);game.displayDie=game.dice;game.rolling=false;
+    if(!legalTokens(game.turn,game.dice).length){
+      const six=game.dice===6;game.dice=null;if(!six)nextTurn();renderGame();
+      setTimeout(()=>game&&game.turn!==0&&!game.over?botTurn():null,450);return
+    }
+    renderGame();setTimeout(botChooseMove,450)
+  },350)
+}
+function tokenMarkup(pi,ti,t){
+  const movable=game.turn===pi&&game.dice!==null&&canMove(t,game.dice);
+  return '<button class="token '+t.color+' '+(movable?'movable':'')+'" data-token="'+pi+'-'+ti+'" aria-label="'+colorNames[t.color]+' token '+(ti+1)+(movable?', movable with rolled '+game.dice:'')+'"></button>'
+}
+function placeTokens(){
+  const board=document.getElementById('ludoBoard');if(!board||!game)return;
+  const cells=[...board.querySelectorAll('.cell')];
+  const yard={green:[[1,1],[1,4],[4,1],[4,4]],yellow:[[1,10],[1,13],[4,10],[4,13]],blue:[[10,1],[10,4],[13,1],[13,4]],red:[[10,10],[10,13],[13,10],[13,13]]};
+  const groups=new Map();
+  game.tokens.forEach((arr,pi)=>arr.forEach((t,ti)=>{
+    let rc=tokenCell(pi,t);if(!rc)rc=yard[t.color][ti];
+    const key=rc[0]+'-'+rc[1];
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push({pi,ti,t})
+  }));
+  groups.forEach((items,key)=>{
+    const cell=cells.find(x=>x.dataset.cell===key);if(!cell)return;
+    const wrap=document.createElement('div');wrap.className='token-stack count-'+items.length;
+    items.forEach(({pi,ti,t})=>wrap.insertAdjacentHTML('beforeend',tokenMarkup(pi,ti,t)));
+    cell.appendChild(wrap)
+  })
+}
+const svg = `<svg class="board-svg-bg" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<rect x="0" y="0" width="60" height="60" fill="#ff4757"/><rect x="10" y="10" width="40" height="40" fill="#fff" rx="6"/>
+<circle cx="22" cy="22" r="5" fill="#ff4757"/><circle cx="38" cy="22" r="5" fill="#ff4757"/><circle cx="22" cy="38" r="5" fill="#ff4757"/><circle cx="38" cy="38" r="5" fill="#ff4757"/>
+<rect x="90" y="0" width="60" height="60" fill="#2ed573"/><rect x="100" y="10" width="40" height="40" fill="#fff" rx="6"/>
+<circle cx="112" cy="22" r="5" fill="#2ed573"/><circle cx="128" cy="22" r="5" fill="#2ed573"/><circle cx="112" cy="38" r="5" fill="#2ed573"/><circle cx="128" cy="38" r="5" fill="#2ed573"/>
+<rect x="0" y="90" width="60" height="60" fill="#1e90ff"/><rect x="10" y="100" width="40" height="40" fill="#fff" rx="6"/>
+<circle cx="22" cy="112" r="5" fill="#1e90ff"/><circle cx="38" cy="112" r="5" fill="#1e90ff"/><circle cx="22" cy="128" r="5" fill="#1e90ff"/><circle cx="38" cy="128" r="5" fill="#1e90ff"/>
+<rect x="90" y="90" width="60" height="60" fill="#ffa502"/><rect x="100" y="100" width="40" height="40" fill="#fff" rx="6"/>
+<circle cx="112" cy="112" r="5" fill="#ffa502"/><circle cx="128" cy="112" r="5" fill="#ffa502"/><circle cx="112" cy="128" r="5" fill="#ffa502"/><circle cx="128" cy="128" r="5" fill="#ffa502"/>
+<polygon points="60,60 90,60 75,75" fill="#2ed573"/><polygon points="90,60 90,90 75,75" fill="#ffa502"/><polygon points="60,90 90,90 75,75" fill="#1e90ff"/><polygon points="60,60 60,90 75,75" fill="#ff4757"/>
+<path d="M60 10H90 M60 20H90 M60 30H90 M60 40H90 M60 50H90 M60 100H90 M60 110H90 M60 120H90 M60 130H90 M60 140H90 M10 60V90 M20 60V90 M30 60V90 M40 60V90 M50 60V90 M100 60V90 M110 60V90 M120 60V90 M130 60V90 M140 60V90" stroke="#000" stroke-width="0.45" fill="none"/>
+<path d="M70 0V60 M80 0V60 M70 90V150 M80 90V150 M0 70H60 M0 80H60 M90 70H150 M90 80H150" stroke="#000" stroke-width="0.45" fill="none"/>
+<rect x="60" y="0" width="30" height="60" fill="none" stroke="#000" stroke-width="0.55"/><rect x="60" y="90" width="30" height="60" fill="none" stroke="#000" stroke-width="0.55"/><rect x="0" y="60" width="60" height="30" fill="none" stroke="#000" stroke-width="0.55"/><rect x="90" y="60" width="60" height="30" fill="none" stroke="#000" stroke-width="0.55"/>
+<text x="15" y="65" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="65" y="25" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="85" y="15" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="125" y="65" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="135" y="85" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="85" y="125" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="65" y="135" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text><text x="25" y="85" font-size="7" font-weight="900" text-anchor="middle" dominant-baseline="central">★</text>
+</svg>`;
+function renderGame(){
+  if(!game)return;
+  const canRoll=game.turn===0&&!game.over&&!game.rolling&&game.dice===null;
+  const shown=game.rolling?game.displayDie:game.dice||game.displayDie||null;
+  const dieLabel=game.rolling?'Rolling':shown?'Rolled a '+shown:'Roll dice';
+  const p=game.players;
+  const card=(pi,side)=>{const pl=p[pi];return '<div class="ak-player '+(game.turn===pi?'active ':'')+(pl?'':'hidden')+' '+side+'"><span class="ak-avatar ak-'+pl.color+'">P'+(pi+1)+'</span><span>'+pl.name+(game.turn===pi?' · TURN':'')+'</span></div>'};
+  const slot=(pi)=>'<div class="ak-dice-slot" id="ak-slot-'+pi+'">'+(game.turn===pi?'<button class="ref-die" data-action="roll" aria-label="'+dieLabel+'" '+(canRoll?'':'disabled')+'>'+dieFace(shown)+'</button>':'')+'</div>';
+  let html='<section class="inner-page"><div class="game-stage">'+
+  '<div class="ak-topbar"><button class="ak-round" data-action="exitGame" aria-label="Exit game">←</button><div class="ak-turn">TURN '+(game.moves+1)+' · '+colorNames[p[game.turn].color].toUpperCase()+'</div><button class="ak-round" data-action="settings" aria-label="Game settings">⚙</button></div>'+
+  '<div class="ak-player-row">'+card(0,'left')+card(1,'right')+'</div>'+
+  '<div class="ak-dice-row">'+slot(0)+slot(1)+'</div>'+
+  '<div class="ak-board-wrap"><div id="ludoBoard" class="ak-board ref-board" role="grid" aria-label="Playable Ludo board">'+svg+boardCells()+'</div></div>'+
+  '<div class="ak-dice-row">'+slot(2)+slot(3)+'</div>'+
+  '<div class="ak-player-row">'+card(2,'left')+card(3,'right')+'</div>'+
+  '<button class="ak-roll" data-action="roll" '+(canRoll?'':'disabled')+'>'+((game.dice!==null)?'Select Token':'Roll Dice')+'</button>'+
+  '<div class="ak-status" id="gameStatus" aria-live="polite">'+game.message+'</div>';
+  if(game.over){const won=game.winner===0;html+='<div class="match-result" role="dialog" aria-labelledby="resultTitle"><h2 id="resultTitle">'+(won?'You win!':'Match complete')+'</h2><p><strong>Winner:</strong> '+p[game.winner||0].name+'</p><p>'+game.message+'</p>'+(won?'<p><strong>Reward:</strong> +'+game.reward+' coins · +'+game.reward+' XP</p>':'')+'<div class="result-actions"><button class="primary-button" data-action="playAgain">▶ Play Again</button><button class="outline-button" data-action="returnHome">Return Home</button></div></div>'}
+  html+='</div></section>';
+  document.querySelector('.content').innerHTML=html;placeTokens();bindGameEvents();
+}
+
+function bindGameEvents(){
+  document.querySelectorAll('[data-token]').forEach(b=>b.addEventListener('click',()=>{const [p,t]=b.dataset.token.split('-').map(Number);moveToken(p,t)}));
+  document.querySelectorAll('[data-action="roll"]').forEach(b=>b.addEventListener('click',rollDice));
+  document.querySelector('[data-action="exitGame"]')?.addEventListener('click',()=>{game=null;activeTab='Play';render()});
+  document.querySelector('[data-action="settings"]')?.addEventListener('click',showSettings);
+  document.querySelector('[data-action="playAgain"]')?.addEventListener('click',initGame);
+  document.querySelector('[data-action="returnHome"]')?.addEventListener('click',()=>{game=null;activeTab='Home';render()});
+}
+function startGame(){activeTab='Play';game=null;render();setTimeout(initGame,80)}
+function showSettings(){
+  const m=document.createElement('div');m.className='modal-backdrop';m.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><button class="modal-close" aria-label="Close settings">×</button><span class="eyebrow" style="color:var(--cyan)">Local settings</span><h2 id="settingsTitle">Quick Match</h2><p>Rules are local: a six releases a yard token, gives an extra turn, and starting squares are safe. No online service is connected.</p><button class="primary-button" style="width:100%" data-close>Done</button></div>';document.body.appendChild(m);m.querySelector('.modal-close').onclick=()=>m.remove();m.querySelector('[data-close]').onclick=()=>m.remove()
+}
+function showInvite(){
+  const m=document.createElement('div');m.className='modal-backdrop';m.innerHTML='<div class="modal" role="dialog" aria-modal="true"><button class="modal-close" aria-label="Close">×</button><span class="eyebrow" style="color:var(--cyan)">Local table</span><h2>Play with friends</h2><p>This file has no online backend. You can pass the device to another player, but Quick Match currently uses three computer players.</p><button class="primary-button" style="width:100%" data-close>Close</button></div>';document.body.appendChild(m);m.querySelector('.modal-close').onclick=()=>m.remove();m.querySelector('[data-close]').onclick=()=>m.remove()
+}
+function toast(msg){clearTimeout(noticeTimer);document.querySelector('.toast')?.remove();const e=document.createElement('div');e.className='toast';e.textContent='✓ '+msg;document.body.appendChild(e);noticeTimer=setTimeout(()=>e.remove(),2200)}
+function render(){
+  if(game){renderGame();return}
+  const content=activeTab==='Home'?homeView():activeTab==='Play'?playView():profileView();
+  document.getElementById('app').innerHTML=pageShell(content);
+  document.querySelectorAll('[data-nav]').forEach(e=>e.addEventListener('click',ev=>{ev.preventDefault();activeTab=e.dataset.nav;render()}));
+  document.querySelectorAll('[data-mode]').forEach(e=>e.addEventListener('click',()=>{selectedMode=e.dataset.mode;render()}));
+  document.querySelectorAll('[data-action="play"]').forEach(e=>e.addEventListener('click',startGame));
+  document.querySelectorAll('[data-action="startGame"]').forEach(e=>e.addEventListener('click',startGame));
+  document.querySelectorAll('[data-action="invite"]').forEach(e=>e.addEventListener('click',showInvite));
+  document.querySelectorAll('[data-action="leaderboard"]').forEach(e=>e.addEventListener('click',()=>{showAll=!showAll;render()}));
+  document.querySelectorAll('[data-action="notifications"]').forEach(e=>e.addEventListener('click',()=>toast('No new local notifications.')));
+  document.querySelectorAll('[data-action="editProfile"]').forEach(e=>e.addEventListener('click',showProfileEditor));
+  document.querySelectorAll('[data-action="redeem"]').forEach(e=>e.addEventListener('click',()=>showRedeem(Number(e.dataset.coins||0))));
+  document.querySelectorAll('[data-action="redeemAmount"]').forEach(e=>e.addEventListener('click',()=>showRedeem(Number(e.dataset.amount||e.dataset.coins||0))));
+  document.querySelectorAll('[data-action="adminRedeems"]').forEach(e=>e.addEventListener('click',showAdminRedeems));
+}
+function showProfileEditor(){
+  const m=document.createElement('div');m.className='modal-backdrop';
+  m.innerHTML='<div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileEditTitle"><button class="modal-close" aria-label="Close">×</button><span class="eyebrow" style="color:var(--cyan)">Local profile</span><h2 id="profileEditTitle">Edit profile</h2><label style="display:block;margin:14px 0 6px;font-size:12px;color:var(--muted)">Display name</label><input id="profileName" value="'+profile.name.replace(/"/g,'&quot;')+'" maxlength="32" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)"><label style="display:block;margin:14px 0 6px;font-size:12px;color:var(--muted)">Username</label><input id="profileUsername" value="@'+profile.username.replace(/"/g,'&quot;')+'" maxlength="24" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel-2);color:var(--text)"><button class="primary-button" style="width:100%;margin-top:18px" data-save data-view="profile">Save profile</button></div>';
+  document.body.appendChild(m);
+  const close=()=>m.remove();
+  m.querySelector('.modal-close').onclick=close;
+  m.querySelector('[data-save]').onclick=()=>{
+    const name=m.querySelector('#profileName').value.trim();
+    const username=m.querySelector('#profileUsername').value.trim().replace(/^@/,'');
+    if(!name||!username){toast('Enter both a display name and username.');return}
+    profile={name,username};saveProfile();close();render();
+  };
+}
+render();
+</script>
+
+
+
+
+<script>
+/* Redeem notification click handler */
+document.addEventListener('click',function(e){
+  const b=e.target.closest('[data-action="redeemNotifications"]');
+  if(!b)return;
+  e.preventDefault();
+  if(typeof showRedeemNotifications==='function') showRedeemNotifications();
+});
+</script>
+
+</body></html>
